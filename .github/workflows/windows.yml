@@ -28,7 +28,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref_name }}-${{ inputs.verison }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
