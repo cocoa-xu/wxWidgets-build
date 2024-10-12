@@ -93,6 +93,8 @@ jobs:
               vcvarsall: "amd64_x86"
             }
 
+    name: ${{ matrix.job.target }} - ${{ matrix.job.library }}
+
     steps:
       - name: Build Check
         id: build-check

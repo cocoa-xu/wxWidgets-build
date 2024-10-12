@@ -37,7 +37,7 @@ jobs:
           - { target: "x86_64-apple-darwin", runs-on: "macos-12", library: "static" }
           - { target: "x86_64-apple-darwin", runs-on: "macos-12", library: "shared" }
 
-    name: ${{ matrix.job.target }}
+    name: ${{ matrix.job.target }} - ${{ matrix.job.library }}
 
     steps:
       - name: Build Check
