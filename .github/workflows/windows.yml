@@ -109,7 +109,7 @@ jobs:
             export BUILD_VERSION="${BUILD_VERSION_V#v}"
             echo "version=v${BUILD_VERSION}" >> $GITHUB_OUTPUT
 
-            if [ "${{ matrix.job.target }}" == "arm64-windows-msvc" ]; then
+            if [ "${{ matrix.job.target }}" == "aarch64-windows-msvc" ]; then
               echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
             fi
 
@@ -137,13 +137,12 @@ jobs:
       - name: Compile wxWidgets
         if: steps.build-check.outputs.build == 'true'
         run: |
-          $ref = $env:GITHUB_REF
-          $WXWIDGETS_VERSION=$ref.Replace('refs/tags/v','')
+          $WXWIDGETS_VERSION=${{ steps.build-check.outputs.version }}
           Invoke-WebRequest -Uri "https://github.com/wxWidgets/wxWidgets/releases/download/v${WXWIDGETS_VERSION}/wxWidgets-${WXWIDGETS_VERSION}.zip" -OutFile "wxWidgets-${WXWIDGETS_VERSION}.zip"
           Remove-Item -LiteralPath wxWidgets -Force -Recurse -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path wxWidgets -Force
           Expand-Archive "wxWidgets-${WXWIDGETS_VERSION}.zip" -DestinationPath ./wxWidgets -Force
-          
+
           cd wxWidgets/3rdparty
           Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/${{ steps.build-check.outputs.webview2 }}" -OutFile "webview2-${{ steps.build-check.outputs.webview2 }}.zip"
           Remove-Item -LiteralPath webview2 -Force -Recurse -ErrorAction SilentlyContinue
