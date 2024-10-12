@@ -1,10 +1,10 @@
-name: precompile-macOS
+name: wxwidgets-macos
 
 on:
   workflow_dispatch:
     inputs:
       verison:
-        description: 'wxWidget Version'
+        description: 'wxWidgets Version'
         required: true
       build_arm64:
         description: 'Build ARM64'
@@ -29,11 +29,13 @@ jobs:
   build:
     runs-on: ${{ matrix.job.runs-on }}
     strategy:
+      fail-fast: false
       matrix:
         job:
-          - { target: "arm64-apple-darwin", runs-on: "macos-14" }
-          - { target: "x86_64-apple-darwin", runs-on: "macos-12" }
-      fail-fast: false
+          - { target: "arm64-apple-darwin", runs-on: "macos-14", library: "static" }
+          - { target: "arm64-apple-darwin", runs-on: "macos-14", library: "shared" }
+          - { target: "x86_64-apple-darwin", runs-on: "macos-12", library: "static" }
+          - { target: "x86_64-apple-darwin", runs-on: "macos-12", library: "shared" }
 
     name: ${{ matrix.job.target }}
 
@@ -41,12 +43,16 @@ jobs:
       - name: Build Check
         id: build-check
         run: |
-          if [ "${{ matrix.job.target }}" == "arm64-apple-darwin" ]; then
-            echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
-          fi
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "build=true" >> $GITHUB_OUTPUT
+          else
+            if [ "${{ matrix.job.target }}" == "arm64-apple-darwin" ]; then
+              echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
+            fi
 
-          if [ "${{ matrix.job.target }}" == "x86_64-apple-darwin" ]; then
-            echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
+            if [ "${{ matrix.job.target }}" == "x86_64-apple-darwin" ]; then
+              echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Checkout
@@ -86,9 +92,7 @@ jobs:
           export ROOTDIR="$(pwd)"
           cd wxWidgets
 
-          echo "::group::Build static library"
-
-          export LIBRARY_TYPE="static"
+          export LIBRARY_TYPE="${{ matrix.job.library }}"
           export DESTDIR="${ROOTDIR}/wxWidgets-${LIBRARY_TYPE}-${BUILD_VERSION_V}"
           export FILENAME="wxWidgets-${LIBRARY_TYPE}-${{ matrix.job.target }}.tar.gz"
 
@@ -97,10 +101,16 @@ jobs:
           rm -rf "${ROOTDIR}/build"
           mkdir -p "${ROOTDIR}/build"
 
-          ./configure --disable-sys-libs --disable-tests --disable-shared \
-            --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
-            --with-liblzma --with-urlsession --without-subdirs
-
+          if [ "${LIBRARY_TYPE}" = "static" ]; then
+            ./configure --disable-sys-libs --disable-tests --disable-shared \
+              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
+              --with-liblzma --with-urlsession --without-subdirs
+          else
+            ./configure --disable-sys-libs --disable-tests \
+              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
+              --with-liblzma --with-urlsession --without-subdirs
+          fi
+          
           make -j"$(sysctl -n hw.ncpu)"
 
           make DESTDIR="${DESTDIR}" install
@@ -109,29 +119,6 @@ jobs:
 
           cd "${ROOTDIR}/build"
           shasum -a 256 "${FILENAME}" | tee "${FILENAME}.sha256"
-          echo "::endgroup::"
-
-          echo "::group::Build shared library"
-          export LIBRARY_TYPE="shared"
-          export DESTDIR="${ROOTDIR}/wxWidgets-${LIBRARY_TYPE}-${BUILD_VERSION_V}"
-          export FILENAME="wxWidgets-${LIBRARY_TYPE}-${{ matrix.job.target }}.tar.gz"
-
-          rm -rf "${DESTDIR}"
-          mkdir -p "${DESTDIR}"
-
-          cd "${ROOTDIR}/wxWidgets"
-          ./configure --disable-sys-libs --disable-tests --disable-shared \
-            --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
-            --with-liblzma --with-urlsession --without-subdirs
-          make -j"$(sysctl -n hw.ncpu)"
-
-          make DESTDIR="${DESTDIR}" install
-          cd "${DESTDIR}"
-          tar -czf "${ROOTDIR}/build/${FILENAME}" .
-
-          cd "${ROOTDIR}/build"
-          shasum -a 256 "${FILENAME}" | tee "${FILENAME}.sha256"
-          echo "::endgroup::"
 
       - name: Upload binaries
         uses: softprops/action-gh-release@v2
