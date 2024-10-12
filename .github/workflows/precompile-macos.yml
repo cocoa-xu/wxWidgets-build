@@ -1,0 +1,172 @@
+name: precompile-macOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      verison:
+        description: 'wxWidget Version'
+        required: true
+      build_arm64:
+        description: 'Build ARM64'
+        required: false
+        default: 'true'
+      build_x86_64:
+        description: 'Build x86_64'
+        required: false
+        default: 'true'
+      build_universal:
+        description: 'Build Universal'
+        required: false
+        default: 'true'
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.job.runs-on }}
+    strategy:
+      matrix:
+        job:
+          - { target: "universal-apple-darwin", runs-on: "macos-14" }
+          - { target: "arm64-apple-darwin", runs-on: "macos-14" }
+          - { target: "x86_64-apple-darwin", runs-on: "macos-12" }
+      fail-fast: false
+
+    name: ${{ matrix.job.target }}
+
+    steps:
+      - name: Build Check
+        id: build-check
+        run: |
+          if [ "${{ matrix.job.target }}" == "arm64-apple-darwin" ]; then
+            echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
+          fi
+
+          if [ "${{ matrix.job.target }}" == "x86_64-apple-darwin" ]; then
+            echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
+          fi
+
+          if [ "${{ matrix.job.target }}" == "universal-apple-darwin" ]; then
+            echo "build=${{ inputs.build_universal }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout
+        if: steps.build-check.outputs.build == 'true'
+        uses: actions/checkout@v4
+
+      - name: Get version
+        if: steps.build-check.outputs.build == 'true'
+        id: build-version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            export BUILD_VERSION_V=${{ inputs.verison }}
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            export BUILD_VERSION_V=${GITHUB_REF##*/v}
+          else
+            exit 1
+          fi
+
+          export BUILD_VERSION="${BUILD_VERSION_V#v}"
+          echo "version=v${BUILD_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Get source code
+        if: steps.build-check.outputs.build == 'true'
+        run: |
+          export BUILD_VERSION_V=${{ steps.build-version.outputs.version }}
+          git clone --branch "${BUILD_VERSION_V}" https://github.com/wxWidgets/wxWidgets.git
+          cd wxWidgets
+          git submodule update --init --recursive
+
+      - name: Compile libraries
+        if: steps.build-check.outputs.build == 'true'
+        id: target
+        run: |
+          export BUILD_VERSION_V=${{ steps.build-version.outputs.version }}
+          export BUILD_VERSION="${BUILD_VERSION_V#v}"
+
+          export ROOTDIR="$(pwd)"
+          export SRC_DIR="${ROOTDIR}/wxWidgets"
+          cd "${SRC_DIR}"
+
+          echo "::group::Build static library"
+
+          export LIBRARY_TYPE="static"
+          export DESTDIR="${ROOTDIR}/wxWidgets-${LIBRARY_TYPE}-${BUILD_VERSION_V}"
+          export FILENAME="wxWidgets-${LIBRARY_TYPE}-${{ matrix.job.target }}.tar.gz"
+
+          rm -rf "${SRC_DIR}"
+          mkdir -p "${SRC_DIR}"
+          rm -rf "${DESTDIR}"
+          mkdir -p "${DESTDIR}"
+          rm -rf "${ROOTDIR}/build"
+          mkdir -p "${ROOTDIR}/build"
+
+          if [ "${{ matrix.job.target }}" = "universal-apple-darwin" ]; then
+            ./configure --disable-sys-libs --disable-tests --disable-shared \
+              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
+              --with-liblzma --with-urlsession --without-subdirs \
+              --enable-universal_binary
+          else
+            ./configure --disable-sys-libs --disable-tests --disable-shared \
+              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
+              --with-liblzma --with-urlsession --without-subdirs
+          fi
+
+          make -j"$(sysctl -n hw.ncpu)"
+
+          make DESTDIR="${DESTDIR}" install
+          cd "${DESTDIR}"
+          tar -czf "${ROOTDIR}/build/${FILENAME}" .
+
+          cd "${ROOTDIR}/build"
+          shasum -a 256 "${FILENAME}" | tee "${FILENAME}.sha256"
+          echo "::endgroup::"
+
+          echo "::group::Build shared library"
+          export LIBRARY_TYPE="shared"
+          export DESTDIR="${ROOTDIR}/wxWidgets-${LIBRARY_TYPE}-${BUILD_VERSION_V}"
+          export FILENAME="wxWidgets-${LIBRARY_TYPE}-${{ matrix.job.target }}.tar.gz"
+
+          rm -rf "${DESTDIR}"
+          mkdir -p "${DESTDIR}"
+          rm -rf "${ROOTDIR}/build"
+          mkdir -p "${ROOTDIR}/build"
+
+          if [ "${{ matrix.job.target }}" = "universal-apple-darwin" ]; then
+            ./configure --disable-sys-libs --disable-tests --disable-shared \
+              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
+              --with-liblzma --with-urlsession --without-subdirs \
+              --enable-universal_binary
+          else
+            ./configure --disable-sys-libs --disable-tests --disable-shared \
+              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
+              --with-liblzma --with-urlsession --without-subdirs
+          fi
+
+          make -j"$(sysctl -n hw.ncpu)"
+
+          make DESTDIR="${DESTDIR}" install
+          cd "${DESTDIR}"
+          tar -czf "${ROOTDIR}/build/${FILENAME}" .
+
+          cd "${ROOTDIR}/build"
+          shasum -a 256 "${FILENAME}" | tee "${FILENAME}.sha256"
+          echo "::endgroup::"
+
+      - name: Upload binaries
+        uses: softprops/action-gh-release@v2
+        if: steps.build-check.outputs.build == 'true'
+        with:
+          tag_name: ${{ steps.build-version.outputs.version }}
+          name: ${{ steps.build-version.outputs.version }}
+          files: |
+            build/*.tar.gz
+            build/*.sha256
