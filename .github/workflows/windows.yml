@@ -137,7 +137,7 @@ jobs:
       - name: Compile wxWidgets
         if: steps.build-check.outputs.build == 'true'
         run: |
-          $WXWIDGETS_VERSION=${{ steps.build-check.outputs.version }}
+          $WXWIDGETS_VERSION="${{ steps.build-check.outputs.version }}"
           Invoke-WebRequest -Uri "https://github.com/wxWidgets/wxWidgets/releases/download/v${WXWIDGETS_VERSION}/wxWidgets-${WXWIDGETS_VERSION}.zip" -OutFile "wxWidgets-${WXWIDGETS_VERSION}.zip"
           Remove-Item -LiteralPath wxWidgets -Force -Recurse -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path wxWidgets -Force
