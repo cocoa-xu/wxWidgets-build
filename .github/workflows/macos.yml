@@ -34,7 +34,7 @@ jobs:
     runs-on: ${{ matrix.job.runs-on }}
     concurrency:
       group: ${{ matrix.job.target }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.library }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:

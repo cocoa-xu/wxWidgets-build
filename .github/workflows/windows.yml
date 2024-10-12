@@ -46,7 +46,7 @@ jobs:
     runs-on: windows-2019
     concurrency:
       group: ${{ matrix.job.target }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.library }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     env:
       DEFAULT_WEBVIEW2_VERSION: "1.0.2277.86"
     strategy:

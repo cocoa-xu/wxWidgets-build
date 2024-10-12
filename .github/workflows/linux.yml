@@ -30,8 +30,8 @@ on:
         options:
           - true
           - false
-      build_ppcle64:
-        description: 'Build ppcle64'
+      build_ppc64le:
+        description: 'Build ppc64le'
         required: false
         default: 'true'
         type: choice
@@ -58,7 +58,7 @@ jobs:
     runs-on: ${{ matrix.job.runs-on }}
     concurrency:
       group: ${{ matrix.job.target }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.library }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
@@ -97,8 +97,8 @@ jobs:
               echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
-            if [ "${{ matrix.job.target }}" == "ppcle64-linux-gnu" ]; then
-              echo "build=${{ inputs.build_ppcle64 }}" >> $GITHUB_OUTPUT
+            if [ "${{ matrix.job.target }}" == "ppc64le-linux-gnu" ]; then
+              echo "build=${{ inputs.build_ppc64le }}" >> $GITHUB_OUTPUT
               echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
