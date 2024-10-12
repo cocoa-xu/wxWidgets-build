@@ -84,7 +84,7 @@ jobs:
               library: "shared",
               shared: "1",
               arch: "x86",
-              cpu: "amd64",
+              cpu: "x86",
               out_dir: "vc_lib",
               vcvarsall: "amd64_x86"
             }
@@ -94,7 +94,7 @@ jobs:
               library: "static",
               shared: "0",
               arch: "x86",
-              cpu: "amd64",
+              cpu: "x86",
               out_dir: "vc_lib",
               vcvarsall: "amd64_x86"
             }
