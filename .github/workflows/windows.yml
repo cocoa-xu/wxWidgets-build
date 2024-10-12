@@ -159,12 +159,14 @@ jobs:
           nmake TARGET_CPU=${{ matrix.job.cpu }} BUILD=release SHARED=${{ matrix.job.shared }} DIR_SUFFIX_CPU= -f makefile.vc
 
       - name: Create tarball
+        if: steps.build-check.outputs.build == 'true'
         run: |
           Remove-Item -LiteralPath artifacts -Force -Recurse -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path artifacts -Force
           tar -czf "./artifacts/wxWidgets-${{ matrix.job.library }}-${{ matrix.job.target }}.tar.gz" -C ./wxWidgets/lib/${{ matrix.job.out_dir }} .
 
       - name: SHA256
+        if: steps.build-check.outputs.build == 'true'
         shell: bash
         run: |
           cd ./artifacts
