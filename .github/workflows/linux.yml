@@ -137,7 +137,7 @@ jobs:
             ./docker-build.sh "${{ matrix.job.platform }}" "${{ matrix.job.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
           else
             ./install-deps-linux.sh "${TARGET}" "${{ matrix.job.runs-on }}"
-            ./do-build.sh "${ROOTDIR}" "${$BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
+            ./do-build.sh "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
           fi
 
       - name: Upload binaries

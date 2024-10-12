@@ -11,4 +11,4 @@ TARGET=$6
 JOBS=$7
 
 sudo docker run --privileged --network=host --rm --platform="${PLATFORM}" -v $(pwd):/work "${IMAGE}" \
-    sh -c "chmod a+x /work/install-deps.sh && ./install-deps.sh ${TARGET} ${IMAGE} && chmod a+x /work/do-build.sh && /work/do-build.sh /work ${BUILD_VERSION_V} ${LIBRARY_TYPE} ${TARGET} ${JOBS}"
+    sh -c "chmod a+x /work/install-deps-linux.sh && ./install-deps-linux.sh ${TARGET} ${IMAGE} && chmod a+x /work/do-build.sh && /work/do-build.sh /work ${BUILD_VERSION_V} ${LIBRARY_TYPE} ${TARGET} ${JOBS}"
