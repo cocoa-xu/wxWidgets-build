@@ -99,14 +99,16 @@ jobs:
           path: |
             ./wxWidgets
 
+      - name: Show last commit of wxWidgets
+        if: steps.build-check.outputs.build == 'true'
+        run: |
+          cd wxWidgets
+          git log -1 --stat
+
       - name: Compile libraries
         if: steps.build-check.outputs.build == 'true'
         id: target
         run: |
-          echo "::group::Last commit of wxWidgets"
-          git log -1 --stat
-          echo "::endgroup::"
-
           export ROOTDIR="$(pwd)"
           export BUILD_VERSION_V="${{ steps.build-version.outputs.version }}"
           export LIBRARY_TYPE="${{ matrix.job.library }}"
