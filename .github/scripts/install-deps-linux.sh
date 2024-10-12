@@ -7,15 +7,21 @@ RUNS_ON=$2
 
 export DEBIAN_FRONTEND=noninteractive
 
+if [ -z "$(which sudo)" ]; then
+  export SUDO="" ;
+else
+  export SUDO="sudo" ;
+fi
+
 case $RUNS_ON in
   ubuntu*20.04)
-    sudo apt-get update
-    sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev liblzma-dev libcurl4-openssl-dev libnotify-dev \
+    ${SUDO} apt-get update
+    ${SUDO} apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev liblzma-dev libcurl4-openssl-dev libnotify-dev \
       libsecret-1-dev libgspell-1-dev libgl1-mesa-dev libglu1-mesa-dev
     ;;
   ubuntu*24.04)
-    sudo apt-get update
-    sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev liblzma-dev libcurl4-openssl-dev libnotify-dev \
+    ${SUDO} apt-get update
+    ${SUDO} apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev liblzma-dev libcurl4-openssl-dev libnotify-dev \
       libsecret-1-dev libgspell-1-dev libgl1-mesa-dev libglu1-mesa-dev
     ;;
   *)
