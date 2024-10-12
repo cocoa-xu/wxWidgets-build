@@ -1,0 +1,138 @@
+name: wxwidgets-linux
+
+on:
+  workflow_dispatch:
+    inputs:
+      verison:
+        description: 'wxWidgets Version'
+        required: true
+      build_arm64:
+        description: 'Build ARM64'
+        required: false
+        default: 'true'
+      build_x86_64:
+        description: 'Build x86_64'
+        required: false
+        default: 'true'
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.job.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { target: "aarch64-linux-gnu", runs-on: "ubuntu-latest", library: "static" }
+          - { target: "aarch64-linux-gnu", runs-on: "ubuntu-latest", library: "shared" }
+          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "static" }
+          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "shared" }
+
+    name: ${{ matrix.job.target }} - ${{ matrix.job.library }}
+
+    steps:
+      - name: Build Check
+        id: build-check
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "build=true" >> $GITHUB_OUTPUT
+          else
+            if [ "${{ matrix.job.target }}" == "arm64-apple-darwin" ]; then
+              echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
+            fi
+
+            if [ "${{ matrix.job.target }}" == "x86_64-apple-darwin" ]; then
+              echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Checkout
+        if: steps.build-check.outputs.build == 'true'
+        uses: actions/checkout@v4
+
+      - name: Get version
+        if: steps.build-check.outputs.build == 'true'
+        id: build-version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            export BUILD_VERSION_V=${{ inputs.verison }}
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            export BUILD_VERSION_V=${GITHUB_REF##*/v}
+          else
+            exit 1
+          fi
+
+          export BUILD_VERSION="${BUILD_VERSION_V#v}"
+          echo "version=v${BUILD_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Install system dependencies
+        if: steps.build-check.outputs.build == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev liblzma-dev libcurl4-openssl-dev libnotify-dev \
+            libsecret-1-dev libgspell-1-dev libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Get source code
+        if: steps.build-check.outputs.build == 'true'
+        run: |
+          export BUILD_VERSION_V=${{ steps.build-version.outputs.version }}
+          git clone --branch "${BUILD_VERSION_V}" https://github.com/wxWidgets/wxWidgets.git wxWidgets
+          cd wxWidgets
+          git submodule update --init --recursive
+
+      - name: Compile libraries
+        if: steps.build-check.outputs.build == 'true'
+        id: target
+        run: |
+          export BUILD_VERSION_V=${{ steps.build-version.outputs.version }}
+          export BUILD_VERSION="${BUILD_VERSION_V#v}"
+
+          export ROOTDIR="$(pwd)"
+          cd wxWidgets
+
+          export LIBRARY_TYPE="${{ matrix.job.library }}"
+          export DESTDIR="${ROOTDIR}/wxWidgets-${LIBRARY_TYPE}-${BUILD_VERSION_V}"
+          export FILENAME="wxWidgets-${LIBRARY_TYPE}-${{ matrix.job.target }}.tar.gz"
+
+          rm -rf "${DESTDIR}"
+          mkdir -p "${DESTDIR}"
+          rm -rf "${ROOTDIR}/build"
+          mkdir -p "${ROOTDIR}/build"
+
+          if [ "${LIBRARY_TYPE}" = "static" ]; then
+            ./configure --disable-sys-libs --disable-tests --disable-shared \
+              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
+              --with-liblzma --with-libcurl --without-subdirs
+          else
+            ./configure --disable-sys-libs --disable-tests \
+              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
+              --with-liblzma --with-libcurl --without-subdirs
+          fi
+
+          make -j"$(nproc)"
+
+          make DESTDIR="${DESTDIR}" install
+          cd "${DESTDIR}"
+          tar -czf "${ROOTDIR}/build/${FILENAME}" .
+
+          cd "${ROOTDIR}/build"
+          shasum -a 256 "${FILENAME}" | tee "${FILENAME}.sha256"
+
+      - name: Upload binaries
+        uses: softprops/action-gh-release@v2
+        if: steps.build-check.outputs.build == 'true'
+        with:
+          tag_name: ${{ steps.build-version.outputs.version }}
+          name: ${{ steps.build-version.outputs.version }}
+          files: |
+            build/*.tar.gz
+            build/*.sha256
