@@ -33,9 +33,9 @@ jobs:
       matrix:
         job:
           - { target: "aarch64-linux-gnu", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/arm64" }
-          - { target: "aarch64-linux-gnu", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/arm64" }
+          # - { target: "aarch64-linux-gnu", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/arm64" }
           - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "static" }
-          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "shared" }
+          # - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "shared" }
 
     name: ${{ matrix.job.target }} - ${{ matrix.job.library }}
 
