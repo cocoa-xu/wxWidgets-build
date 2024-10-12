@@ -10,14 +10,26 @@ on:
         description: 'Build ARM64'
         required: false
         default: 'true'
+        type: choice
+        options:
+          - true
+          - false
       build_x86_64:
         description: 'Build x86_64'
         required: false
         default: 'true'
+        type: choice
+        options:
+          - true
+          - false
       build_riscv64:
         description: 'Build riscv64'
         required: false
         default: 'true'
+        type: choice
+        options:
+          - true
+          - false
   push:
     tags:
       - "v*"
