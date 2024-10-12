@@ -107,39 +107,16 @@ jobs:
           git log -1 --stat
           echo "::endgroup::"
 
-          export BUILD_VERSION_V=${{ steps.build-version.outputs.version }}
-          export BUILD_VERSION="${BUILD_VERSION_V#v}"
-
           export ROOTDIR="$(pwd)"
-          cd wxWidgets
-
+          export BUILD_VERSION_V="${{ steps.build-version.outputs.version }}"
           export LIBRARY_TYPE="${{ matrix.job.library }}"
-          export DESTDIR="${ROOTDIR}/wxWidgets-${LIBRARY_TYPE}-${BUILD_VERSION_V}"
-          export FILENAME="wxWidgets-${LIBRARY_TYPE}-${{ matrix.job.target }}.tar.gz"
+          export TARGET="${{ matrix.job.target }}"
+          export JOBS="$(sysctl -n hw.ncpu)"
 
-          rm -rf "${DESTDIR}"
-          mkdir -p "${DESTDIR}"
-          rm -rf "${ROOTDIR}/build"
-          mkdir -p "${ROOTDIR}/build"
+          cp ./.github/scripts/do-build.sh ./do-build.sh
+          chmod a+x ./do-build.sh
 
-          if [ "${LIBRARY_TYPE}" = "static" ]; then
-            ./configure --disable-sys-libs --disable-tests --disable-shared \
-              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
-              --with-liblzma --with-urlsession --without-subdirs
-          else
-            ./configure --disable-sys-libs --disable-tests \
-              --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
-              --with-liblzma --with-urlsession --without-subdirs
-          fi
-          
-          make -j"$(sysctl -n hw.ncpu)"
-
-          make DESTDIR="${DESTDIR}" install
-          cd "${DESTDIR}"
-          tar -czf "${ROOTDIR}/build/${FILENAME}" .
-
-          cd "${ROOTDIR}/build"
-          shasum -a 256 "${FILENAME}" | tee "${FILENAME}.sha256"
+          ./do-build.sh "${ROOTDIR}" "${$BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
 
       - name: Upload binaries
         uses: softprops/action-gh-release@v2

@@ -119,12 +119,6 @@ jobs:
           git log -1 --stat
           echo "::endgroup::"
 
-          ROOTDIR=$1
-          BUILD_VERSION_V=$2
-          LIBRARY_TYPE=$3
-          TARGET=$4
-          JOBS=$5
-
           export ROOTDIR="$(pwd)"
           export BUILD_VERSION_V="${{ steps.build-version.outputs.version }}"
           export LIBRARY_TYPE="${{ matrix.job.library }}"
