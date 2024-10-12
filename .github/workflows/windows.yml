@@ -45,7 +45,7 @@ jobs:
               shared: "1",
               arch: "aarch64",
               cpu: "arm64",
-              out_dir: "vc_arm64_lib",
+              out_dir: "vc_arm64_dll",
               vcvarsall: "amd64_arm64"
             }
           - {
@@ -65,7 +65,7 @@ jobs:
               shared: "1",
               arch: "x86_64",
               cpu: "amd64",
-              out_dir: "vc_x64_lib",
+              out_dir: "vc_x64_dll",
               vcvarsall: "x64"
             }
           - {
@@ -85,7 +85,7 @@ jobs:
               shared: "1",
               arch: "x86",
               cpu: "x86",
-              out_dir: "vc_lib",
+              out_dir: "vc_dll",
               vcvarsall: "amd64_x86"
             }
           - {
