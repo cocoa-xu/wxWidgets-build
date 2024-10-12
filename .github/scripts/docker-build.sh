@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -xe
+
+PLATFORM=$1
+IMAGE=$2
+ROOTDIR=$3
+BUILD_VERSION_V=$4
+LIBRARY_TYPE=$5
+TARGET=$6
+JOBS=$7
+
+sudo docker run --privileged --network=host --rm --platform="${PLATFORM}" -v $(pwd):/work "${IMAGE_NAME}" \
+    sh -c "chmod a+x /work/install-deps.sh && ./install-deps.sh ${TARGET} && chmod a+x /work/do-build.sh && /work/do-build.sh ${ROOTDIR} ${BUILD_VERSION_V} ${LIBRARY_TYPE} ${TARGET} ${JOBS}"
