@@ -17,12 +17,12 @@ case $RUNS_ON in
   ubuntu*20.04)
     ${SUDO} apt-get update
     ${SUDO} apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev liblzma-dev libcurl4-openssl-dev libnotify-dev \
-      libsecret-1-dev libgspell-1-dev libgl1-mesa-dev libglu1-mesa-dev
+      libsecret-1-dev libgspell-1-dev libgl1-mesa-dev libglu1-mesa-dev gcc g++ make
     ;;
   ubuntu*24.04)
     ${SUDO} apt-get update
     ${SUDO} apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev liblzma-dev libcurl4-openssl-dev libnotify-dev \
-      libsecret-1-dev libgspell-1-dev libgl1-mesa-dev libglu1-mesa-dev
+      libsecret-1-dev libgspell-1-dev libgl1-mesa-dev libglu1-mesa-dev gcc g++ make
     ;;
   *)
     echo "Unknown platform: $RUNS_ON"
