@@ -118,8 +118,6 @@ jobs:
 
           rm -rf "${DESTDIR}"
           mkdir -p "${DESTDIR}"
-          rm -rf "${ROOTDIR}/build"
-          mkdir -p "${ROOTDIR}/build"
 
           cd "${ROOTDIR}/wxWidgets"
           ./configure --disable-sys-libs --disable-tests --disable-shared \
