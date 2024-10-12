@@ -121,6 +121,7 @@ jobs:
           rm -rf "${ROOTDIR}/build"
           mkdir -p "${ROOTDIR}/build"
 
+          cd "${ROOTDIR}/wxWidgets"
           ./configure --disable-sys-libs --disable-tests --disable-shared \
             --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
             --with-liblzma --with-urlsession --without-subdirs
