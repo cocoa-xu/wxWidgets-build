@@ -18,16 +18,15 @@ on:
     tags:
       - "v*"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref_name }}-${{ inputs.verison }}
-  cancel-in-progress: false
-
 permissions:
   contents: write
 
 jobs:
   build:
     runs-on: ${{ matrix.job.runs-on }}
+    concurrency:
+      group: ${{ matrix.job.target }}-${{ github.ref }}-${{ inputs.verison }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
