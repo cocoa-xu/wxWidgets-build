@@ -81,7 +81,7 @@ jobs:
         if: steps.build-check.outputs.build == 'true'
         run: |
           export BUILD_VERSION_V=${{ steps.build-version.outputs.version }}
-          git clone --branch "${BUILD_VERSION_V}" https://github.com/wxWidgets/wxWidgets.git
+          git clone --branch "${BUILD_VERSION_V}" https://github.com/wxWidgets/wxWidgets.git wxWidgets
           cd wxWidgets
           git submodule update --init --recursive
 
@@ -93,8 +93,7 @@ jobs:
           export BUILD_VERSION="${BUILD_VERSION_V#v}"
 
           export ROOTDIR="$(pwd)"
-          export SRC_DIR="${ROOTDIR}/wxWidgets"
-          cd "${SRC_DIR}"
+          cd wxWidgets
 
           echo "::group::Build static library"
 
@@ -102,8 +101,6 @@ jobs:
           export DESTDIR="${ROOTDIR}/wxWidgets-${LIBRARY_TYPE}-${BUILD_VERSION_V}"
           export FILENAME="wxWidgets-${LIBRARY_TYPE}-${{ matrix.job.target }}.tar.gz"
 
-          rm -rf "${SRC_DIR}"
-          mkdir -p "${SRC_DIR}"
           rm -rf "${DESTDIR}"
           mkdir -p "${DESTDIR}"
           rm -rf "${ROOTDIR}/build"
