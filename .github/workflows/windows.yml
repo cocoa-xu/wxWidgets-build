@@ -101,13 +101,13 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             export BUILD_VERSION_V=${GITHUB_REF##*/v}
             export BUILD_VERSION="${BUILD_VERSION_V#v}"
-            echo "version=v${BUILD_VERSION}" >> $GITHUB_OUTPUT
+            echo "version=${BUILD_VERSION}" >> $GITHUB_OUTPUT
             echo "build=true" >> $GITHUB_OUTPUT
             echo "webview2=${DEFAULT_WEBVIEW2_VERSION}" >> $GITHUB_OUTPUT
           else
             export BUILD_VERSION_V=${{ inputs.verison }}
             export BUILD_VERSION="${BUILD_VERSION_V#v}"
-            echo "version=v${BUILD_VERSION}" >> $GITHUB_OUTPUT
+            echo "version=${BUILD_VERSION}" >> $GITHUB_OUTPUT
 
             if [ "${{ matrix.job.target }}" == "aarch64-windows-msvc" ]; then
               echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
@@ -175,8 +175,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: steps.build-check.outputs.build == 'true'
         with:
-          tag_name: ${{ steps.build-check.outputs.version }}
-          name: ${{ steps.build-check.outputs.version }}
+          tag_name: v${{ steps.build-check.outputs.version }}
+          name: v${{ steps.build-check.outputs.version }}
           files: |
             artifacts/wxWidgets-*.tar.gz
             artifacts/wxWidgets-*.sha256
