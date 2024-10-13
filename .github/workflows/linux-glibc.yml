@@ -6,8 +6,8 @@ on:
       verison:
         description: 'wxWidgets Version'
         required: true
-      build_arm64:
-        description: 'Build ARM64'
+      build_aarch64:
+        description: 'Build aarch64'
         required: false
         default: 'true'
         type: choice
@@ -85,7 +85,7 @@ jobs:
             export BUILD_VERSION_V=${GITHUB_REF##*/v}
           else
             if [ "${{ matrix.job.target }}" == "aarch64-linux-gnu" ]; then
-              echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
+              echo "build=${{ inputs.build_aarch64 }}" >> $GITHUB_OUTPUT
               echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
