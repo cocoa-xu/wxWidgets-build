@@ -116,7 +116,7 @@ jobs:
           cp ./.github/scripts/do-build.sh ./do-build.sh
           chmod a+x ./do-build.sh
 
-          ./do-build.sh "${ROOTDIR}" "${$BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
+          ./do-build.sh "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
 
       - name: Upload binaries
         uses: softprops/action-gh-release@v2
