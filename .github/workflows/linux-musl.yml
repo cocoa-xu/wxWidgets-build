@@ -73,7 +73,7 @@ jobs:
   linux-musl:
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.job.target }}-${{ inputs.verison }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.target }}-${{ matrix.job.library }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -94,7 +94,7 @@ jobs:
           - { target: "s390x-linux-musl", arch: "s390x", library: "static", image: "musllinux_1_1", platform: "linux/s390x" }
           - { target: "s390x-linux-musl", arch: "s390x", library: "shared", image: "musllinux_1_1", platform: "linux/s390x" }
 
-    name: ${{ matrix.job.target }}
+    name: ${{ matrix.job.target }} - ${{ matrix.job.library }}
 
     steps:
       - name: Build Check

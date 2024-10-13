@@ -45,7 +45,7 @@ jobs:
   windows:
     runs-on: windows-2019
     concurrency:
-      group: ${{ matrix.job.target }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.library }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.target }}-${{ matrix.job.library }}
       cancel-in-progress: false
     env:
       DEFAULT_WEBVIEW2_VERSION: "1.0.2277.86"

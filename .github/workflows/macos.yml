@@ -33,7 +33,7 @@ jobs:
   build:
     runs-on: ${{ matrix.job.runs-on }}
     concurrency:
-      group: ${{ matrix.job.target }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.library }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.target }}-${{ matrix.job.library }}
       cancel-in-progress: false
     strategy:
       fail-fast: false
