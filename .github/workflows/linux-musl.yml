@@ -158,6 +158,37 @@ jobs:
           fi
           sudo docker image ls "${{ steps.build-check.outputs.image }}"
 
+      - name: Restore Source Code
+        if: steps.build-check.outputs.build == 'true'
+        id: cache-src
+        uses: actions/cache/restore@v4
+        with:
+          key: src-${{ steps.build-check.outputs.version }}
+          path: |
+            ./wxWidgets
+
+      - name: Get source code
+        if: steps.build-check.outputs.build == 'true' && steps.cache-src.outputs.cache-hit != 'true'
+        run: |
+          export BUILD_VERSION=${{ steps.build-check.outputs.version }}
+          git clone --branch "v${BUILD_VERSION}" https://github.com/wxWidgets/wxWidgets.git wxWidgets
+          cd wxWidgets
+          git submodule update --init --recursive
+
+      - name: Cache Source Code
+        if: steps.build-check.outputs.build == 'true' && steps.cache-src.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          key: src-${{ steps.build-check.outputs.version }}
+          path: |
+            ./wxWidgets
+
+      - name: Show last commit of wxWidgets
+        if: steps.build-check.outputs.build == 'true'
+        run: |
+          cd wxWidgets
+          git log -1 --stat
+
       - name: Compile libraries
         if: steps.build-check.outputs.build == 'true'
         run: |
