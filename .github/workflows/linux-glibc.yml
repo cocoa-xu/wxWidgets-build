@@ -1,4 +1,4 @@
-name: wxwidgets-linux
+name: linux-glibc
 
 on:
   workflow_dispatch:
