@@ -19,10 +19,14 @@ mkdir -p "${DESTDIR}"
 rm -rf "${ROOTDIR}/build"
 mkdir -p "${ROOTDIR}/build"
 
+if [ "$(uname -s)" = "Darwin" ]; then
+  export wxwidgets_flags="--with-cocoa --with-macosx-version-min=11.0"
+fi
+
 if [ "${LIBRARY_TYPE}" = "static" ]; then
-  ./configure --disable-sys-libs --disable-shared
+  ./configure --disable-sys-libs --disable-shared ${wxwidgets_flags}
 else
-  ./configure --disable-sys-libs
+  ./configure --disable-sys-libs ${wxwidgets_flags}
 fi
 
 make -j"${JOBS}"
