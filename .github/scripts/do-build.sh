@@ -20,13 +20,9 @@ rm -rf "${ROOTDIR}/build"
 mkdir -p "${ROOTDIR}/build"
 
 if [ "${LIBRARY_TYPE}" = "static" ]; then
-  ./configure --disable-sys-libs --disable-tests --disable-shared \
-    --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
-    --with-liblzma --with-libcurl --without-subdirs
+  ./configure --disable-sys-libs --disable-shared
 else
-  ./configure --disable-sys-libs --disable-tests \
-    --enable-cxx11 --enable-stl --enable-webview --enable-monolithic \
-    --with-liblzma --with-libcurl --without-subdirs
+  ./configure --disable-sys-libs
 fi
 
 make -j"${JOBS}"
