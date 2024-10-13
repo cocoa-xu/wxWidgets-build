@@ -167,7 +167,7 @@ jobs:
           cp ./.github/scripts/docker-build.sh ./docker-build.sh
           chmod a+x ./docker-build.sh
 
-          ./docker-build.sh "${{ matrix.job.platform }}" "${{ matrix.job.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
+          ./docker-build.sh "${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
 
       - name: Upload binaries
         uses: softprops/action-gh-release@v2
