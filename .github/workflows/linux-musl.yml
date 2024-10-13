@@ -1,0 +1,180 @@
+name: linux-musl
+
+on:
+  workflow_dispatch:
+    inputs:
+      verison:
+        description: 'wxWidgets Version'
+        required: true
+      build_aarch64:
+        description: 'Build aarch64'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - true
+          - false
+      build_x86_64:
+        description: 'Build x86_64'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - true
+          - false
+      build_i686:
+        description: 'Build i686'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - true
+          - false
+      build_armv7l:
+        description: 'Build armv7l'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - true
+          - false
+      build_riscv64:
+        description: 'Build riscv64'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - true
+          - false
+      build_ppc64le:
+        description: 'Build ppc64le'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - true
+          - false
+      build_s390x:
+        description: 'Build s390x'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - true
+          - false
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  linux-musl:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.job.target }}-${{ inputs.verison }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { target: "x86_64-linux-musl", arch: "x86_64", image: "musllinux_1_1", platform: "linux/amd64" }
+          - { target: "i686-linux-musl", arch: "i686", image: "musllinux_1_1", platform: "linux/386" }
+          - { target: "aarch64-linux-musl", arch: "aarch64", image: "musllinux_1_1", platform: "linux/aarch64" }
+          - { target: "armv7l-linux-musl", arch: "armv7l", image: "musllinux_1_2", platform: "linux/arm/v7" }
+          - { target: "riscv64-linux-musl", arch: "riscv64", image: "alpine:edge", platform: "linux/riscv64" }
+          - { target: "ppc64le-linux-musl", arch: "ppc64le", image: "musllinux_1_1", platform: "linux/ppc64le" }
+          - { target: "s390x-linux-musl", arch: "s390x", image: "musllinux_1_1", platform: "linux/s390x" }
+
+    name: ${{ matrix.job.target }}
+
+    steps:
+      - name: Build Check
+        id: build-check
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "build=true" >> $GITHUB_OUTPUT
+            export BUILD_VERSION_V="v${GITHUB_REF##*/v}"
+          else
+            if [ "${{ matrix.job.target }}" == "aarch64-linux-musl" ]; then
+              echo "build=${{ inputs.build_aarch64 }}" >> $GITHUB_OUTPUT
+            fi
+
+            if [ "${{ matrix.job.target }}" == "x86_64-linux-musl" ]; then
+              echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
+            fi
+
+            if [ "${{ matrix.job.target }}" == "i686-linux-musl" ]; then
+              echo "build=${{ inputs.build_i686 }}" >> $GITHUB_OUTPUT
+            fi
+
+            if [ "${{ matrix.job.target }}" == "armv7l-linux-musleabihf" ]; then
+              echo "build=${{ inputs.build_armv7l }}" >> $GITHUB_OUTPUT
+            fi
+
+            if [ "${{ matrix.job.target }}" == "riscv64-linux-musl" ]; then
+              echo "build=${{ inputs.build_riscv64 }}" >> $GITHUB_OUTPUT
+            fi
+
+            if [ "${{ matrix.job.target }}" == "ppc64le-linux-musl" ]; then
+              echo "build=${{ inputs.build_ppc64le }}" >> $GITHUB_OUTPUT
+            fi
+
+            if [ "${{ matrix.job.target }}" == "s390x-linux-musl" ]; then
+              echo "build=${{ inputs.build_s390x }}" >> $GITHUB_OUTPUT
+            fi
+
+            export BUILD_VERSION_V="${{ inputs.verison }}"
+          fi
+
+          export BUILD_VERSION="${BUILD_VERSION_V#v}"
+          echo "version=${BUILD_VERSION}" >> $GITHUB_OUTPUT
+
+          if [[ "${{ matrix.job.image }}" == musllinux* ]]; then
+            echo "image=quay.io/pypa/${{ matrix.job.image }}_${{ matrix.job.arch }}" >> $GITHUB_OUTPUT
+          else
+            echo "image=${{ matrix.job.image }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout
+        if: steps.build-check.outputs.build == 'true'
+        uses: actions/checkout@v4
+
+      - name: Pull docker image
+        if: steps.build-check.outputs.build == 'true'
+        run: |
+          sudo docker pull --platform="${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}"
+          if [ "${{ matrix.job.arch }}" != "$(uname -m)" ]; then
+            sudo apt-get update
+            sudo apt-get install -y binfmt-support qemu-user-static
+          fi
+          sudo docker image ls "${{ steps.build-check.outputs.image }}"
+
+      - name: Compile libraries
+        if: steps.build-check.outputs.build == 'true'
+        run: |
+          export ROOTDIR="$(pwd)"
+          export BUILD_VERSION="${{ steps.build-check.outputs.version }}"
+          export LIBRARY_TYPE="${{ matrix.job.library }}"
+          export TARGET="${{ matrix.job.target }}"
+          export JOBS="$(nproc)"
+
+          cp ./.github/scripts/install-deps-musl.sh ./install-deps.sh
+          chmod a+x ./install-deps.sh
+          cp ./.github/scripts/do-build.sh ./do-build.sh
+          chmod a+x ./do-build.sh
+          cp ./.github/scripts/docker-build.sh ./docker-build.sh
+          chmod a+x ./docker-build.sh
+
+          ./docker-build.sh "${{ matrix.job.platform }}" "${{ matrix.job.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
+
+      - name: Upload binaries
+        uses: softprops/action-gh-release@v2
+        if: steps.build-check.outputs.build == 'true'
+        with:
+          tag_name: v${{ steps.build-check.outputs.version }}
+          name: v${{ steps.build-check.outputs.version }}
+          files: |
+            build/*.tar.gz
+            build/*.sha256

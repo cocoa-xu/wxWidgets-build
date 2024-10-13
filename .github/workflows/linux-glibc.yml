@@ -82,6 +82,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "build=true" >> $GITHUB_OUTPUT
+            export BUILD_VERSION_V=${GITHUB_REF##*/v}
           else
             if [ "${{ matrix.job.target }}" == "aarch64-linux-gnu" ]; then
               echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
@@ -106,52 +107,41 @@ jobs:
               echo "build=${{ inputs.build_s390x }}" >> $GITHUB_OUTPUT
               echo "docker=true" >> $GITHUB_OUTPUT
             fi
+
+            export BUILD_VERSION_V=${{ inputs.verison }}
           fi
+
+          export BUILD_VERSION="${BUILD_VERSION_V#v}"
+          echo "version=${BUILD_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Checkout
         if: steps.build-check.outputs.build == 'true'
         uses: actions/checkout@v4
 
-      - name: Get version
-        if: steps.build-check.outputs.build == 'true'
-        id: build-version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            export BUILD_VERSION_V=${{ inputs.verison }}
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            export BUILD_VERSION_V=${GITHUB_REF##*/v}
-          else
-            exit 1
-          fi
-
-          export BUILD_VERSION="${BUILD_VERSION_V#v}"
-          echo "version=v${BUILD_VERSION}" >> $GITHUB_OUTPUT
-
       - name: Pull docker image
         if: steps.build-check.outputs.docker == 'true'
         run: |
           sudo docker pull --platform=${{ matrix.job.platform }} ${{ matrix.job.image }}
-
-      - name: Install binfmt
-        if: steps.build-check.outputs.docker == 'true'
-        run: |
-          sudo apt update
-          sudo apt install -y binfmt-support qemu-user-static
+          if [ "${{ matrix.job.arch }}" != "$(uname -m)" ]; then
+            sudo apt-get update
+            sudo apt-get install -y binfmt-support qemu-user-static
+          fi
+          sudo docker image ls "${{ matrix.job.image }}"
 
       - name: Restore Source Code
         if: steps.build-check.outputs.build == 'true'
         id: cache-src
         uses: actions/cache/restore@v4
         with:
-          key: src-${{ steps.build-version.outputs.version }}
+          key: src-${{ steps.build-check.outputs.version }}
           path: |
             ./wxWidgets
 
       - name: Get source code
         if: steps.build-check.outputs.build == 'true' && steps.cache-src.outputs.cache-hit != 'true'
         run: |
-          export BUILD_VERSION_V=${{ steps.build-version.outputs.version }}
-          git clone --branch "${BUILD_VERSION_V}" https://github.com/wxWidgets/wxWidgets.git wxWidgets
+          export BUILD_VERSION=${{ steps.build-check.outputs.version }}
+          git clone --branch "v${BUILD_VERSION}" https://github.com/wxWidgets/wxWidgets.git wxWidgets
           cd wxWidgets
           git submodule update --init --recursive
 
@@ -159,7 +149,7 @@ jobs:
         if: steps.build-check.outputs.build == 'true' && steps.cache-src.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          key: src-${{ steps.build-version.outputs.version }}
+          key: src-${{ steps.build-check.outputs.version }}
           path: |
             ./wxWidgets
 
@@ -174,13 +164,13 @@ jobs:
         id: target
         run: |
           export ROOTDIR="$(pwd)"
-          export BUILD_VERSION_V="${{ steps.build-version.outputs.version }}"
+          export BUILD_VERSION_V="v${{ steps.build-check.outputs.version }}"
           export LIBRARY_TYPE="${{ matrix.job.library }}"
           export TARGET="${{ matrix.job.target }}"
           export JOBS="$(nproc)"
 
-          cp ./.github/scripts/install-deps-linux.sh ./install-deps-linux.sh
-          chmod a+x ./install-deps-linux.sh
+          cp ./.github/scripts/install-deps-linux.sh ./install-deps.sh
+          chmod a+x ./install-deps.sh
           cp ./.github/scripts/do-build.sh ./do-build.sh
           chmod a+x ./do-build.sh
 
@@ -198,8 +188,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: steps.build-check.outputs.build == 'true'
         with:
-          tag_name: ${{ steps.build-version.outputs.version }}
-          name: ${{ steps.build-version.outputs.version }}
+          tag_name: v${{ steps.build-check.outputs.version }}
+          name: v${{ steps.build-check.outputs.version }}
           files: |
             build/*.tar.gz
             build/*.sha256
