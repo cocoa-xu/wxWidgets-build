@@ -79,13 +79,20 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: "x86_64-linux-musl", arch: "x86_64", image: "musllinux_1_1", platform: "linux/amd64" }
-          - { target: "i686-linux-musl", arch: "i686", image: "musllinux_1_1", platform: "linux/386" }
-          - { target: "aarch64-linux-musl", arch: "aarch64", image: "musllinux_1_1", platform: "linux/aarch64" }
-          - { target: "armv7l-linux-musleabihf", arch: "armv7l", image: "musllinux_1_2", platform: "linux/arm/v7" }
-          - { target: "riscv64-linux-musl", arch: "riscv64", image: "alpine:edge", platform: "linux/riscv64" }
-          - { target: "ppc64le-linux-musl", arch: "ppc64le", image: "musllinux_1_1", platform: "linux/ppc64le" }
-          - { target: "s390x-linux-musl", arch: "s390x", image: "musllinux_1_1", platform: "linux/s390x" }
+          - { target: "x86_64-linux-musl", arch: "x86_64", library: "static", image: "musllinux_1_1", platform: "linux/amd64" }
+          - { target: "x86_64-linux-musl", arch: "x86_64", library: "shared", image: "musllinux_1_1", platform: "linux/amd64" }
+          - { target: "i686-linux-musl", arch: "i686", library: "static", image: "musllinux_1_1", platform: "linux/386" }
+          - { target: "i686-linux-musl", arch: "i686", library: "shared", image: "musllinux_1_1", platform: "linux/386" }
+          - { target: "aarch64-linux-musl", arch: "aarch64", library: "static", image: "musllinux_1_1", platform: "linux/aarch64" }
+          - { target: "aarch64-linux-musl", arch: "aarch64", library: "shared", image: "musllinux_1_1", platform: "linux/aarch64" }
+          - { target: "armv7l-linux-musleabihf", arch: "armv7l", library: "static", image: "musllinux_1_2", platform: "linux/arm/v7" }
+          - { target: "armv7l-linux-musleabihf", arch: "armv7l", library: "shared", image: "musllinux_1_2", platform: "linux/arm/v7" }
+          - { target: "riscv64-linux-musl", arch: "riscv64", library: "static", image: "alpine:edge", platform: "linux/riscv64" }
+          - { target: "riscv64-linux-musl", arch: "riscv64", library: "shared", image: "alpine:edge", platform: "linux/riscv64" }
+          - { target: "ppc64le-linux-musl", arch: "ppc64le", library: "static", image: "musllinux_1_1", platform: "linux/ppc64le" }
+          - { target: "ppc64le-linux-musl", arch: "ppc64le", library: "shared",image: "musllinux_1_1", platform: "linux/ppc64le" }
+          - { target: "s390x-linux-musl", arch: "s390x", library: "static", image: "musllinux_1_1", platform: "linux/s390x" }
+          - { target: "s390x-linux-musl", arch: "s390x", library: "shared", image: "musllinux_1_1", platform: "linux/s390x" }
 
     name: ${{ matrix.job.target }}
 
@@ -167,7 +174,7 @@ jobs:
           cp ./.github/scripts/docker-build.sh ./docker-build.sh
           chmod a+x ./docker-build.sh
 
-          ./docker-build.sh "${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
+          ./docker-build.sh "${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}" "${ROOTDIR}" "${BUILD_VERSION}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
 
       - name: Upload binaries
         uses: softprops/action-gh-release@v2
