@@ -52,6 +52,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "build=true" >> $GITHUB_OUTPUT
+            export BUILD_VERSION_V="v${GITHUB_REF##*/v}"
           else
             if [ "${{ matrix.job.target }}" == "arm64-apple-darwin" ]; then
               echo "build=${{ inputs.build_arm64 }}" >> $GITHUB_OUTPUT
@@ -60,41 +61,31 @@ jobs:
             if [ "${{ matrix.job.target }}" == "x86_64-apple-darwin" ]; then
               echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
             fi
+
+            export BUILD_VERSION_V="${{ inputs.verison }}"
           fi
+
+          export BUILD_VERSION="${BUILD_VERSION_V#v}"
+          echo "version=${BUILD_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Checkout
         if: steps.build-check.outputs.build == 'true'
         uses: actions/checkout@v4
-
-      - name: Get version
-        if: steps.build-check.outputs.build == 'true'
-        id: build-version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            export BUILD_VERSION_V=${{ inputs.verison }}
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            export BUILD_VERSION_V=${GITHUB_REF##*/v}
-          else
-            exit 1
-          fi
-
-          export BUILD_VERSION="${BUILD_VERSION_V#v}"
-          echo "version=v${BUILD_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Restore Source Code
         if: steps.build-check.outputs.build == 'true'
         id: cache-src
         uses: actions/cache/restore@v4
         with:
-          key: src-${{ steps.build-version.outputs.version }}
+          key: src-${{ steps.build-check.outputs.version }}
           path: |
             ./wxWidgets
 
       - name: Get source code
         if: steps.build-check.outputs.build == 'true' && steps.cache-src.outputs.cache-hit != 'true'
         run: |
-          export BUILD_VERSION_V=${{ steps.build-version.outputs.version }}
-          git clone --branch "${BUILD_VERSION_V}" https://github.com/wxWidgets/wxWidgets.git wxWidgets
+          export BUILD_VERSION=${{ steps.build-check.outputs.version }}
+          git clone --branch "v${BUILD_VERSION}" https://github.com/wxWidgets/wxWidgets.git wxWidgets
           cd wxWidgets
           git submodule update --init --recursive
 
@@ -102,7 +93,7 @@ jobs:
         if: steps.build-check.outputs.build == 'true' && steps.cache-src.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          key: src-${{ steps.build-version.outputs.version }}
+          key: src-${{ steps.build-check.outputs.version }}
           path: |
             ./wxWidgets
 
@@ -117,7 +108,7 @@ jobs:
         id: target
         run: |
           export ROOTDIR="$(pwd)"
-          export BUILD_VERSION_V="${{ steps.build-version.outputs.version }}"
+          export BUILD_VERSION_V="v${{ steps.build-check.outputs.version }}"
           export LIBRARY_TYPE="${{ matrix.job.library }}"
           export TARGET="${{ matrix.job.target }}"
           export JOBS="$(sysctl -n hw.ncpu)"
@@ -131,8 +122,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: steps.build-check.outputs.build == 'true'
         with:
-          tag_name: ${{ steps.build-version.outputs.version }}
-          name: ${{ steps.build-version.outputs.version }}
+          tag_name: v${{ steps.build-check.outputs.version }}
+          name: v${{ steps.build-check.outputs.version }}
           files: |
             build/*.tar.gz
             build/*.sha256
