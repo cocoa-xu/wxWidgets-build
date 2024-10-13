@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -xe
 
@@ -14,7 +14,7 @@ else
 fi
 
 ${SUDO} apk update
-${SUDO} apk add gcc g++ curl curl-dev make curl git gtk+3.0-dev glu-dev
+${SUDO} apk add gcc g++ curl curl-dev make curl git gtk+3.0-dev glu-dev bash
 
 git clone --branch "v${BUILD_VERSION}" https://github.com/wxWidgets/wxWidgets.git "${ROOTDIR}/wxWidgets"
 cd "${ROOTDIR}/wxWidgets"
