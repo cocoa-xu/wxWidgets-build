@@ -1,0 +1,38 @@
+name: auto-update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *"
+
+jobs:
+  auto-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTO_UPDATE_TOKEN }}
+
+      - name: Get latest version
+        id: version
+        run: |
+          pip3 install -U lastversion
+          VERSION=$(lastversion wxWidgets)
+          echo "Latest version of wxWidgets is ${VERSION}"
+          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        uses: mukunku/tag-exists-action@v1.5.0
+        id: check-tag
+        with:
+          tag: ${{ steps.version.outputs.tag }}
+          repo: 'cocoa-xu/wxWidgets-build'
+
+      - name: Update if tag not exists
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin ${{ steps.version.outputs.tag }}
