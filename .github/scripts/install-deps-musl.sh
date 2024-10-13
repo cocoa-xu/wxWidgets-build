@@ -5,6 +5,7 @@ set -xe
 TARGET=$1
 RUNS_ON=$2
 ROOTDIR=$3
+BUILD_VERSION=$4
 
 if [ -z "$(which sudo)" ]; then
   export SUDO="" ;
