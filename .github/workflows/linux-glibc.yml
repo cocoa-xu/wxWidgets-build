@@ -71,12 +71,12 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "static" }
-          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "shared" }
+          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "static", image: "ubuntu:20.04", platform: "linux/amd64" }
+          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-20.04", library: "shared", image: "ubuntu:20.04", platform: "linux/amd64" }
           - { target: "aarch64-linux-gnu", runs-on: "ubicloud-standard-8-arm", library: "static", image: "ubuntu:20.04", platform: "linux/arm64" }
           - { target: "aarch64-linux-gnu", runs-on: "ubicloud-standard-8-arm", library: "shared", image: "ubuntu:20.04", platform: "linux/arm64" }
-          - { target: "armv7l-linux-gnu", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/arm/v7" }
-          - { target: "armv7l-linux-gnu", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/arm/v7" }
+          - { target: "armv7l-linux-gnueabihf", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/arm/v7" }
+          - { target: "armv7l-linux-gnueabihf", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/arm/v7" }
           - { target: "riscv64-linux-gnu", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/riscv64" }
           - { target: "riscv64-linux-gnu", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/riscv64" }
           - { target: "ppc64le-linux-gnu", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/ppc64le" }
@@ -103,6 +103,11 @@ jobs:
               echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
             fi
 
+            if [ "${{ matrix.job.target }}" == "armv7l-linux-gnueabihf" ]; then
+              echo "build=${{ inputs.build_riscv64 }}" >> $GITHUB_OUTPUT
+              echo "docker=true" >> $GITHUB_OUTPUT
+            fi
+
             if [ "${{ matrix.job.target }}" == "riscv64-linux-gnu" ]; then
               echo "build=${{ inputs.build_riscv64 }}" >> $GITHUB_OUTPUT
               echo "docker=true" >> $GITHUB_OUTPUT
@@ -124,6 +129,8 @@ jobs:
           export BUILD_VERSION="${BUILD_VERSION_V#v}"
           echo "version=${BUILD_VERSION}" >> $GITHUB_OUTPUT
 
+          echo "image=${{ matrix.job.image }}" >> $GITHUB_OUTPUT
+
       - name: Checkout
         if: steps.build-check.outputs.build == 'true'
         uses: actions/checkout@v4
@@ -131,12 +138,12 @@ jobs:
       - name: Pull docker image
         if: steps.build-check.outputs.docker == 'true'
         run: |
-          sudo docker pull --platform=${{ matrix.job.platform }} ${{ matrix.job.image }}
+          sudo docker pull --platform="${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}"
           if [ "${{ matrix.job.arch }}" != "$(uname -m)" ]; then
             sudo apt-get update
             sudo apt-get install -y binfmt-support qemu-user-static
           fi
-          sudo docker image ls "${{ matrix.job.image }}"
+          sudo docker image ls "${{ steps.build-check.outputs.image }}"
 
       - name: Restore Source Code
         if: steps.build-check.outputs.build == 'true'
@@ -188,7 +195,7 @@ jobs:
             cp ./.github/scripts/docker-build.sh ./docker-build.sh
             chmod a+x ./docker-build.sh
 
-            ./docker-build.sh "${{ matrix.job.platform }}" "${{ matrix.job.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
+            ./docker-build.sh "${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
           else
             ./install-deps-linux.sh "${TARGET}" "${{ matrix.job.runs-on }}"
             ./do-build.sh "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
