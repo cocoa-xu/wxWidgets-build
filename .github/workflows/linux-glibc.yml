@@ -104,7 +104,7 @@ jobs:
             fi
 
             if [ "${{ matrix.job.target }}" == "armv7l-linux-gnueabihf" ]; then
-              echo "build=${{ inputs.build_riscv64 }}" >> $GITHUB_OUTPUT
+              echo "build=${{ inputs.build_armv7l }}" >> $GITHUB_OUTPUT
               echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
