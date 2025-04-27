@@ -41,8 +41,8 @@ jobs:
         job:
           - { target: "arm64-apple-darwin", runs-on: "macos-14", library: "static" }
           - { target: "arm64-apple-darwin", runs-on: "macos-14", library: "shared" }
-          - { target: "x86_64-apple-darwin", runs-on: "macos-12", library: "static" }
-          - { target: "x86_64-apple-darwin", runs-on: "macos-12", library: "shared" }
+          - { target: "x86_64-apple-darwin", runs-on: "macos-13", library: "static" }
+          - { target: "x86_64-apple-darwin", runs-on: "macos-13", library: "shared" }
 
     name: ${{ matrix.job.target }} - ${{ matrix.job.library }}
 
