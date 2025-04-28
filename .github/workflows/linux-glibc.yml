@@ -101,6 +101,7 @@ jobs:
 
             if [ "${{ matrix.job.target }}" == "x86_64-linux-gnu" ]; then
               echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
+              echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
             if [ "${{ matrix.job.target }}" == "armv7l-linux-gnueabihf" ]; then
