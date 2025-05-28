@@ -198,7 +198,7 @@ jobs:
 
             ./docker-build.sh "${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
           else
-            ./install-deps.sh "${TARGET}" "${{ matrix.job.runs-on }}"
+            ./install-deps.sh "${TARGET}" "${{ matrix.job.image }}"
             ./do-build.sh "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
           fi
 
