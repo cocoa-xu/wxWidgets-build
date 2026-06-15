@@ -22,6 +22,10 @@ if [ "$(uname -s)" = "Darwin" ]; then
   export wxwidgets_flags="--with-cocoa --with-macosx-version-min=11.0"
 fi
 
+# wx 3.2.x bundles third-party C (zlib) that GCC 14+ rejects by default;
+# keep the C89-era diagnostics non-fatal so newer toolchains build.
+export CFLAGS="${CFLAGS} -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=int-conversion"
+
 if [ "${LIBRARY_TYPE}" = "static" ]; then
   ./configure --disable-sys-libs --disable-shared ${wxwidgets_flags}
 else
