@@ -134,7 +134,7 @@ jobs:
 
       - name: Checkout
         if: steps.build-check.outputs.build == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Pull docker image
         if: steps.build-check.outputs.docker == 'true'
@@ -149,7 +149,7 @@ jobs:
       - name: Restore Source Code
         if: steps.build-check.outputs.build == 'true'
         id: cache-src
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: src-${{ steps.build-check.outputs.version }}
           path: |
@@ -165,7 +165,7 @@ jobs:
 
       - name: Cache Source Code
         if: steps.build-check.outputs.build == 'true' && steps.cache-src.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           key: src-${{ steps.build-check.outputs.version }}
           path: |
@@ -203,7 +203,7 @@ jobs:
           fi
 
       - name: Upload binaries
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: steps.build-check.outputs.build == 'true'
         with:
           tag_name: v${{ steps.build-check.outputs.version }}

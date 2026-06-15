@@ -43,19 +43,19 @@ permissions:
 
 jobs:
   windows:
-    runs-on: windows-2019
+    runs-on: windows-2022
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.target }}-${{ matrix.job.library }}
       cancel-in-progress: false
     env:
-      DEFAULT_WEBVIEW2_VERSION: "1.0.2277.86"
+      DEFAULT_WEBVIEW2_VERSION: "1.0.4022.49"
     strategy:
       fail-fast: false
       matrix:
         job:
           - {
               target: "aarch64-windows-msvc",
-              runs-on: "windows-2019",
+              runs-on: "windows-2022",
               library: "shared",
               shared: "1",
               arch: "aarch64",
@@ -65,7 +65,7 @@ jobs:
             }
           - {
               target: "aarch64-windows-msvc",
-              runs-on: "windows-2019",
+              runs-on: "windows-2022",
               library: "static",
               shared: "0",
               arch: "aarch64",
@@ -75,7 +75,7 @@ jobs:
             }
           - {
               target: "x86_64-windows-msvc",
-              runs-on: "windows-2019",
+              runs-on: "windows-2022",
               library: "shared",
               shared: "1",
               arch: "x86_64",
@@ -85,7 +85,7 @@ jobs:
             }
           - {
               target: "x86_64-windows-msvc",
-              runs-on: "windows-2019",
+              runs-on: "windows-2022",
               library: "static",
               shared: "0",
               arch: "x86_64",
@@ -95,7 +95,7 @@ jobs:
             }
           - {
               target: "i686-windows-msvc",
-              runs-on: "windows-2019",
+              runs-on: "windows-2022",
               library: "shared",
               shared: "1",
               arch: "x86",
@@ -105,7 +105,7 @@ jobs:
             }
           - {
               target: "i686-windows-msvc",
-              runs-on: "windows-2019",
+              runs-on: "windows-2022",
               library: "static",
               shared: "0",
               arch: "x86",
@@ -197,7 +197,7 @@ jobs:
           sha256sum "${FILENAME}" | tee "${FILENAME}.sha256"
 
       - name: Upload binaries
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         if: steps.build-check.outputs.build == 'true'
         with:
           tag_name: v${{ steps.build-check.outputs.version }}
