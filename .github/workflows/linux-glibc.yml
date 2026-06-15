@@ -96,32 +96,26 @@ jobs:
           else
             if [ "${{ matrix.job.target }}" == "aarch64-linux-gnu" ]; then
               echo "build=${{ inputs.build_aarch64 }}" >> $GITHUB_OUTPUT
-              echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
             if [ "${{ matrix.job.target }}" == "x86_64-linux-gnu" ]; then
               echo "build=${{ inputs.build_x86_64 }}" >> $GITHUB_OUTPUT
-              echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
             if [ "${{ matrix.job.target }}" == "armv7l-linux-gnueabihf" ]; then
               echo "build=${{ inputs.build_armv7l }}" >> $GITHUB_OUTPUT
-              echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
             if [ "${{ matrix.job.target }}" == "riscv64-linux-gnu" ]; then
               echo "build=${{ inputs.build_riscv64 }}" >> $GITHUB_OUTPUT
-              echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
             if [ "${{ matrix.job.target }}" == "ppc64le-linux-gnu" ]; then
               echo "build=${{ inputs.build_ppc64le }}" >> $GITHUB_OUTPUT
-              echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
             if [ "${{ matrix.job.target }}" == "s390x-linux-gnu" ]; then
               echo "build=${{ inputs.build_s390x }}" >> $GITHUB_OUTPUT
-              echo "docker=true" >> $GITHUB_OUTPUT
             fi
 
             export BUILD_VERSION_V=${{ inputs.verison }}
@@ -137,7 +131,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Pull docker image
-        if: steps.build-check.outputs.docker == 'true'
+        if: steps.build-check.outputs.build == 'true'
         run: |
           sudo docker pull --platform="${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}"
           if [ "${{ matrix.job.arch }}" != "$(uname -m)" ]; then
@@ -191,16 +185,10 @@ jobs:
           chmod a+x ./install-deps.sh
           cp ./.github/scripts/do-build.sh ./do-build.sh
           chmod a+x ./do-build.sh
+          cp ./.github/scripts/docker-build.sh ./docker-build.sh
+          chmod a+x ./docker-build.sh
 
-          if [ "${{ steps.build-check.outputs.docker }}" = "true" ]; then
-            cp ./.github/scripts/docker-build.sh ./docker-build.sh
-            chmod a+x ./docker-build.sh
-
-            ./docker-build.sh "${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
-          else
-            ./install-deps.sh "${TARGET}" "${{ matrix.job.image }}"
-            ./do-build.sh "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
-          fi
+          ./docker-build.sh "${{ matrix.job.platform }}" "${{ steps.build-check.outputs.image }}" "${ROOTDIR}" "${BUILD_VERSION_V}" "${LIBRARY_TYPE}" "${TARGET}" "${JOBS}"
 
       - name: Upload binaries
         uses: softprops/action-gh-release@v3
