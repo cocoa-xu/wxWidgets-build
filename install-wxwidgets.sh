@@ -5,6 +5,7 @@ set -euo pipefail
 
 req="${INPUT_WXWIDGETS_VERSION:-}"
 library="${INPUT_LIBRARY:-shared}"
+triplet="${INPUT_TRIPLET:-}"
 repo="${INPUT_REPOSITORY:-cocoa-xu/wxWidgets-build}"
 install_dir="${INPUT_INSTALL_DIR:-.wxwidgets}"
 add_to_path="${INPUT_ADD_TO_PATH:-true}"
@@ -146,7 +147,9 @@ esac
 [ -n "$ver" ] || err "could not parse version requirement: '$req'"
 version_valid "$ver" || err "invalid wxWidgets version: '$ver'"
 
-triplet="$(detect_triplet)"
+if [ -z "$triplet" ]; then
+  triplet="$(detect_triplet)"
+fi
 log "Platform: $triplet  |  library: $library  |  requirement: ${op} ${ver}"
 
 asset_ok() {

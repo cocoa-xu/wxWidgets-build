@@ -64,6 +64,7 @@ The current runner platform is detected automatically. Supported triplets are:
 |---|---|---|
 | `wxwidgets_version` | - | exact version or requirement (required) |
 | `library` | `shared` | `shared` or `static` |
+| `triplet` | detected runner platform | override the detected platform triplet |
 | `install-dir` | `.wxwidgets` | directory to extract into |
 | `add-to-path` | `true` | append `bin` to `PATH` when present |
 | `repository` | `cocoa-xu/wxWidgets-build` | release source |
