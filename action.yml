@@ -1,0 +1,81 @@
+name: 'Install wxWidgets'
+description: 'Download and set up a precompiled wxWidgets build for the current runner from cocoa-xu/wxWidgets-build.'
+author: 'cocoa-xu'
+branding:
+  icon: 'package'
+  color: 'blue'
+
+inputs:
+  wxwidgets_version:
+    description: >-
+      wxWidgets version or requirement. An exact version (e.g. "3.3.3.1")
+      matches that release exactly; an Elixir-style requirement resolves to the
+      highest available release that satisfies it: "~> 3.3", ">= 3.2.8",
+      "< 3.4", etc.
+    required: false
+  wxwidgets-version:
+    description: 'Alias for wxwidgets_version.'
+    required: false
+  library:
+    description: 'Library type to install: shared or static.'
+    required: false
+    default: 'shared'
+  install-dir:
+    description: 'Directory to extract wxWidgets into.'
+    required: false
+    default: '.wxwidgets'
+  add-to-path:
+    description: 'Append wxWidgets bin directory to PATH when the archive provides one.'
+    required: false
+    default: 'true'
+  repository:
+    description: 'The wxWidgets-build repository to download releases from.'
+    required: false
+    default: 'cocoa-xu/wxWidgets-build'
+  token:
+    description: 'Token used to list releases when resolving a requirement (exact versions need no token).'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  wxwidgets-version:
+    description: 'The concrete wxWidgets version that was resolved and installed.'
+    value: ${{ steps.install.outputs.wxwidgets-version }}
+  install-dir:
+    description: 'Absolute path the archive was extracted to.'
+    value: ${{ steps.install.outputs.install-dir }}
+  prefix:
+    description: 'Install prefix inside install-dir when present, otherwise install-dir.'
+    value: ${{ steps.install.outputs.prefix }}
+  bindir:
+    description: 'Absolute path of the wxWidgets bin directory when present.'
+    value: ${{ steps.install.outputs.bindir }}
+  includedir:
+    description: 'Absolute path of the wxWidgets include directory when present.'
+    value: ${{ steps.install.outputs.includedir }}
+  libdir:
+    description: 'Absolute path of the wxWidgets library directory.'
+    value: ${{ steps.install.outputs.libdir }}
+  wx-config:
+    description: 'Absolute path to wx-config when present.'
+    value: ${{ steps.install.outputs.wx-config }}
+  triplet:
+    description: 'The detected platform triplet (e.g. x86_64-linux-gnu).'
+    value: ${{ steps.install.outputs.triplet }}
+  library:
+    description: 'The installed library type: shared or static.'
+    value: ${{ steps.install.outputs.library }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: install
+      shell: bash
+      run: bash "${{ github.action_path }}/install-wxwidgets.sh"
+      env:
+        INPUT_WXWIDGETS_VERSION: ${{ inputs.wxwidgets_version || inputs.wxwidgets-version }}
+        INPUT_LIBRARY: ${{ inputs.library }}
+        INPUT_INSTALL_DIR: ${{ inputs.install-dir }}
+        INPUT_ADD_TO_PATH: ${{ inputs.add-to-path }}
+        INPUT_REPOSITORY: ${{ inputs.repository }}
+        INPUT_TOKEN: ${{ inputs.token }}
