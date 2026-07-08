@@ -3,7 +3,7 @@ name: linux-glibc
 on:
   workflow_dispatch:
     inputs:
-      verison:
+      version:
         description: 'wxWidgets Version'
         required: true
       build_aarch64:
@@ -65,24 +65,24 @@ jobs:
   build:
     runs-on: ${{ matrix.job.runs-on }}
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.verison }}-${{ matrix.job.target }}-${{ matrix.job.library }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version }}-${{ matrix.job.target }}-${{ matrix.job.library }}
       cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
         job:
-          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/amd64" }
-          - { target: "x86_64-linux-gnu", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/amd64" }
-          - { target: "aarch64-linux-gnu", runs-on: "ubicloud-standard-8-arm", library: "static", image: "ubuntu:20.04", platform: "linux/arm64" }
-          - { target: "aarch64-linux-gnu", runs-on: "ubicloud-standard-8-arm", library: "shared", image: "ubuntu:20.04", platform: "linux/arm64" }
-          - { target: "armv7l-linux-gnueabihf", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/arm/v7" }
-          - { target: "armv7l-linux-gnueabihf", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/arm/v7" }
-          - { target: "riscv64-linux-gnu", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/riscv64" }
-          - { target: "riscv64-linux-gnu", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/riscv64" }
-          - { target: "ppc64le-linux-gnu", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/ppc64le" }
-          - { target: "ppc64le-linux-gnu", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/ppc64le" }
-          - { target: "s390x-linux-gnu", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/s390x" }
-          - { target: "s390x-linux-gnu", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/s390x" }
+          - { target: "x86_64-linux-gnu", arch: "x86_64", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/amd64" }
+          - { target: "x86_64-linux-gnu", arch: "x86_64", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/amd64" }
+          - { target: "aarch64-linux-gnu", arch: "aarch64", runs-on: "ubicloud-standard-8-arm", library: "static", image: "ubuntu:20.04", platform: "linux/arm64" }
+          - { target: "aarch64-linux-gnu", arch: "aarch64", runs-on: "ubicloud-standard-8-arm", library: "shared", image: "ubuntu:20.04", platform: "linux/arm64" }
+          - { target: "armv7l-linux-gnueabihf", arch: "armv7l", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/arm/v7" }
+          - { target: "armv7l-linux-gnueabihf", arch: "armv7l", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/arm/v7" }
+          - { target: "riscv64-linux-gnu", arch: "riscv64", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/riscv64" }
+          - { target: "riscv64-linux-gnu", arch: "riscv64", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/riscv64" }
+          - { target: "ppc64le-linux-gnu", arch: "ppc64le", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/ppc64le" }
+          - { target: "ppc64le-linux-gnu", arch: "ppc64le", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/ppc64le" }
+          - { target: "s390x-linux-gnu", arch: "s390x", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/s390x" }
+          - { target: "s390x-linux-gnu", arch: "s390x", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/s390x" }
 
     name: ${{ matrix.job.target }} - ${{ matrix.job.library }}
 
@@ -118,7 +118,7 @@ jobs:
               echo "build=${{ inputs.build_s390x }}" >> $GITHUB_OUTPUT
             fi
 
-            export BUILD_VERSION_V=${{ inputs.verison }}
+            export BUILD_VERSION_V="${{ inputs.version }}"
           fi
 
           export BUILD_VERSION="${BUILD_VERSION_V#v}"
@@ -196,6 +196,7 @@ jobs:
         with:
           tag_name: v${{ steps.build-check.outputs.version }}
           name: v${{ steps.build-check.outputs.version }}
+          target_commitish: ${{ github.sha }}
           files: |
             build/*.tar.gz
             build/*.sha256

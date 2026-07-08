@@ -2,35 +2,62 @@ name: auto-update
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'wxWidgets Version (latest when empty)'
+        required: false
+
+permissions:
+  actions: write
+  contents: read
 
 jobs:
   auto-update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.AUTO_UPDATE_TOKEN }}
-
-      - name: Get latest version
+      - name: Resolve version
         id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          pip3 install -U lastversion
-          VERSION=$(lastversion wxWidgets)
-          echo "Latest version of wxWidgets is ${VERSION}"
-          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
+          if [ -n "${INPUT_VERSION}" ]; then
+            VERSION="${INPUT_VERSION#v}"
+            echo "force=true" >> "$GITHUB_OUTPUT"
+          else
+            pip3 install -U lastversion
+            VERSION=$(lastversion wxWidgets)
+            VERSION="${VERSION#v}"
+            echo "force=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Check if tag exists
-        uses: mukunku/tag-exists-action@v1.5.0
-        id: check-tag
-        with:
-          tag: ${{ steps.version.outputs.tag }}
-          repo: 'cocoa-xu/wxWidgets-build'
+          echo "Resolved wxWidgets version is ${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Update if tag not exists
-        if: steps.check-tag.outputs.exists == 'false'
+      - name: Check if release exists
+        id: check-release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag ${{ steps.version.outputs.tag }}
-          git push origin ${{ steps.version.outputs.tag }}
+          if gh release view "${{ steps.version.outputs.tag }}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch precompilation workflows
+        if: steps.version.outputs.force == 'true' || steps.check-release.outputs.exists == 'false'
+        env:
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          for workflow in linux-glibc.yml linux-musl.yml macos.yml windows.yml; do
+            gh workflow run "${workflow}" --repo "${GITHUB_REPOSITORY}" --ref "${REF_NAME}" -f "version=${BUILD_VERSION}"
+            echo "Dispatched ${workflow} for v${BUILD_VERSION}"
+          done
+
+      - name: Skip existing release
+        if: steps.version.outputs.force != 'true' && steps.check-release.outputs.exists == 'true'
+        run: |
+          echo "Release ${{ steps.version.outputs.tag }} already exists; no jobs dispatched."
