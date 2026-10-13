@@ -166,7 +166,7 @@ jobs:
       - name: Restore Source Code
         if: steps.build-check.outputs.build == 'true'
         id: cache-src
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           key: src-${{ steps.build-check.outputs.source-version }}
           path: |
@@ -183,7 +183,7 @@ jobs:
 
       - name: Cache Source Code
         if: steps.build-check.outputs.build == 'true' && steps.cache-src.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           key: src-${{ steps.build-check.outputs.source-version }}
           path: |

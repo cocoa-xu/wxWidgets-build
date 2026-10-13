@@ -18,7 +18,7 @@ Install a precompiled wxWidgets build in one step:
 
 ```yaml
 steps:
-  - uses: actions/checkout@v6
+  - uses: actions/checkout@v7
 
   - name: Install wxWidgets
     id: wx
