@@ -1,4 +1,5 @@
 name: auto-update
+run-name: auto-update ${{ inputs.version || 'latest' }}
 
 on:
   workflow_dispatch:
@@ -19,15 +20,20 @@ jobs:
         id: version
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ -n "${INPUT_VERSION}" ]; then
             VERSION="${INPUT_VERSION#v}"
             echo "force=true" >> "$GITHUB_OUTPUT"
           else
-            pip3 install -U lastversion
-            VERSION=$(lastversion wxWidgets)
+            VERSION=$(gh api repos/wxWidgets/wxWidgets/releases/latest --jq .tag_name)
             VERSION="${VERSION#v}"
             echo "force=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "Invalid wxWidgets version: ${VERSION}" >&2
+            exit 1
           fi
 
           echo "Resolved wxWidgets version is ${VERSION}"
