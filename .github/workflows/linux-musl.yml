@@ -71,7 +71,7 @@ permissions:
 
 jobs:
   linux-musl:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.job.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version }}-${{ matrix.job.target }}-${{ matrix.job.library }}
       cancel-in-progress: true
