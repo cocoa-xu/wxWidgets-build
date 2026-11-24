@@ -74,7 +74,8 @@ runs:
   steps:
     - id: install
       shell: bash
-      run: bash "${{ github.action_path }}/install-wxwidgets.sh"
+      # github.action_path is the host path; GITHUB_ACTION_PATH is mapped into container jobs.
+      run: bash "$GITHUB_ACTION_PATH/install-wxwidgets.sh"
       env:
         INPUT_WXWIDGETS_VERSION: ${{ inputs.wxwidgets_version || inputs.wxwidgets-version }}
         INPUT_LIBRARY: ${{ inputs.library }}
