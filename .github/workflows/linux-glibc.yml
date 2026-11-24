@@ -73,8 +73,8 @@ jobs:
         job:
           - { target: "x86_64-linux-gnu", arch: "x86_64", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/amd64" }
           - { target: "x86_64-linux-gnu", arch: "x86_64", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/amd64" }
-          - { target: "aarch64-linux-gnu", arch: "aarch64", runs-on: "ubicloud-standard-8-arm", library: "static", image: "ubuntu:20.04", platform: "linux/arm64" }
-          - { target: "aarch64-linux-gnu", arch: "aarch64", runs-on: "ubicloud-standard-8-arm", library: "shared", image: "ubuntu:20.04", platform: "linux/arm64" }
+          - { target: "aarch64-linux-gnu", arch: "aarch64", runs-on: "ubuntu-24.04-arm", library: "static", image: "ubuntu:20.04", platform: "linux/arm64" }
+          - { target: "aarch64-linux-gnu", arch: "aarch64", runs-on: "ubuntu-24.04-arm", library: "shared", image: "ubuntu:20.04", platform: "linux/arm64" }
           - { target: "armv7l-linux-gnueabihf", arch: "armv7l", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/arm/v7" }
           - { target: "armv7l-linux-gnueabihf", arch: "armv7l", runs-on: "ubuntu-latest", library: "shared", image: "ubuntu:20.04", platform: "linux/arm/v7" }
           - { target: "riscv64-linux-gnu", arch: "riscv64", runs-on: "ubuntu-latest", library: "static", image: "ubuntu:20.04", platform: "linux/riscv64" }
