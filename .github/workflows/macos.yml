@@ -39,8 +39,8 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: "arm64-apple-darwin", runs-on: "macos-14", library: "static" }
-          - { target: "arm64-apple-darwin", runs-on: "macos-14", library: "shared" }
+          - { target: "arm64-apple-darwin", runs-on: "macos-15", library: "static" }
+          - { target: "arm64-apple-darwin", runs-on: "macos-15", library: "shared" }
           - { target: "x86_64-apple-darwin", runs-on: "macos-15-intel", library: "static" }
           - { target: "x86_64-apple-darwin", runs-on: "macos-15-intel", library: "shared" }
 
